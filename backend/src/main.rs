@@ -9,10 +9,10 @@ use serde::Deserialize;
 use std::net::SocketAddr;
 use tower_http::services::ServeDir;
 
+mod web;
 
 // Error module
 mod error;
-mod web;
 
 #[tokio::main]
 async fn main() {
