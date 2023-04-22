@@ -1,5 +1,9 @@
 use regex::Regex;
 use clap::{Arg, App};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::io::prelude::*;
+
 
 fn main() {
     let args = App::new("grep-lite")
@@ -9,23 +13,26 @@ fn main() {
             .help("The pattern to search for")
             .takes_value(true)
             .required(true))
-        // .arg(Arg::with_name("input")
-        //     .help("File to search")
-        //     .takes_value(true)
-        //     .required(true))
+        .arg(Arg::with_name("input")
+            .help("File to search")
+            .takes_value(true)
+            .required(true))
         .get_matches();
 
     let pattern = args.value_of("pattern").unwrap();
     let re = Regex::new(pattern).unwrap();
+    
 
-    let quote = "Every face, every shop, bedroom window, public-house, and
-dark square is a picture feverishly turned--in search of what?
-It is the same with books. What do we seek through millions of pages?";
+    let input = args.value_of("input").unwrap();
+    let f = File::open(input).unwrap();
+    let reader = BufReader::new(f);
 
-  for line in quote.lines() {
-    match re.find(line) {
-      Some(_) => println!("{}", line),
-      None => (),
+
+    for line_ in reader.lines() {
+        let line = line_.unwrap();
+        match re.find(&line) {
+            Some(_) => println!("{}", line),
+            None => (),
+        }
     }
-  }
 }
