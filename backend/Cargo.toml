@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.17"
+tokio = { version = "1.28.0", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+httpc-test = "0.1.1"
