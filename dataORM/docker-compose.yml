@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  database:
+    image: postgres:latest
+    container_name: rust_db
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_USER: rustuser
+      POSTGRES_PASSWORD: rustpassword
+      POSTGRES_DB: rustdb
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: psql -U postgres -q -d postgres -c "SELECT 'ready';"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
