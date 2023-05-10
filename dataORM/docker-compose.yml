@@ -4,7 +4,8 @@ services:
     image: postgres:latest
     container_name: rust_db
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
+      - ./data:/data
     restart: always
     environment:
       POSTGRES_USER: rustuser
@@ -18,3 +19,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+
+volumes:
+  db-data:
