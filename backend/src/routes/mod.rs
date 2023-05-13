@@ -10,6 +10,7 @@ mod get_json;
 mod validate_data;
 mod custom_json_extractor;
 mod create_task;
+mod get_one_task;
 
 use axum::http::Method;
 use axum::{
@@ -31,6 +32,7 @@ use crate::routes::{
     validate_data::validate_data,
     custom_json_extractor::custom_json_extractor,
     create_task::create_task,
+    get_one_task::get_one_task,
 };
 
 /// Middleware message
@@ -71,5 +73,6 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/validate_data", post(validate_data))
         .route("/custom_json_extractor", post(custom_json_extractor))
         .route("/tasks", post(create_task))
+        .route("/tasks/:task_id", get(get_one_task))
         .with_state(app_state)
 }
