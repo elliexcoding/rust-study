@@ -30,6 +30,7 @@ use crate::routes::{
     get_json::get_json,
     validate_data::validate_data,
     custom_json_extractor::custom_json_extractor,
+    create_task::create_task,
 };
 
 /// Middleware message
@@ -43,7 +44,7 @@ pub struct AppState {
     pub database: DatabaseConnection,
 }
 
-pub fn create_routes(database: DatabaseConnection) -> Router {
+pub async fn create_routes(database: DatabaseConnection) -> Router {
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
         .allow_origin(Any);
@@ -69,5 +70,6 @@ pub fn create_routes(database: DatabaseConnection) -> Router {
         .route("/get_json", get(get_json))
         .route("/validate_data", post(validate_data))
         .route("/custom_json_extractor", post(custom_json_extractor))
+        .route("/tasks", post(create_task))
         .with_state(app_state)
 }
