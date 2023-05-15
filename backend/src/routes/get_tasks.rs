@@ -43,23 +43,26 @@ pub async fn get_tasks(
     Query(query_params): Query<GetTasksQueryParams>) -> Result<Json<Vec<ResponseTask>>, StatusCode> {
 
     // Conditional filter search
-    // let mut priority_filter = Condition::all();
-    // if let Some(priority) = query_params.priority {
-    //     priority_filter = priority_filter.add(tasks::Column::Priority.eq(priority));
-    // }
+    let mut priority_filter = Condition::all();
+    if let Some(priority) = query_params.priority {
+        priority_filter = if priority.is_empty() {
+            priority_filter.add(tasks::Column::Priority.is_null())
+        } else {
+            priority_filter.add(tasks::Column::Priority.eq(priority))
+        };
+    }
 
-    let second_filter = Condition::all().add_option(query_params.priority.map(
-        |priority| {
-            if priority.is_empty() {
-                return tasks::Column::Priority.is_null();
-            }
-
-            tasks::Column::Priority.eq(priority)
-        }
-    ));
+    // let second_filter = Condition::all().add_option(query_params.priority.map(
+    //     |priority| {
+    //         if priority.is_empty() {
+    //             return tasks::Column::Priority.is_null();
+    //         }
+    //         tasks::Column::Priority.eq(priority)
+    //     }
+    // ));
 
     let tasks = Tasks::find()
-        .filter(second_filter)
+        .filter(priority_filter)
         .all(&database)
         .await
         .map_err(|_error| StatusCode::INTERNAL_SERVER_ERROR)?;
