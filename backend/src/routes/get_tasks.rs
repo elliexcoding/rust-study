@@ -1,9 +1,8 @@
-use axum::extract::{Path, State};
+use axum::extract::{Path, State, Query};
 use axum::http::StatusCode;
 use axum::Json;
-use axum::response::IntoResponse;
-use sea_orm::{DatabaseConnection, EntityTrait};
-use crate::database::tasks::Entity as Tasks;
+use sea_orm::{ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter};
+use crate::database::tasks::{Entity as Tasks, self};
 
 #[derive(serde::Serialize)]
 pub struct ResponseTask {
@@ -16,7 +15,7 @@ pub struct ResponseTask {
 
 pub async fn get_one_task(State(database): State<DatabaseConnection>,
                           Path(task_id): Path<i32>) -> Result<Json<ResponseTask>, StatusCode> {
-    println!("Starting get one task!");
+
     let task = Tasks::find_by_id(task_id)
         .one(&database)
         .await
@@ -34,10 +33,36 @@ pub async fn get_one_task(State(database): State<DatabaseConnection>,
     }
 }
 
+#[derive(serde::Deserialize)]
+pub struct GetTasksQueryParams {
+    priority: Option<String>,
+}
+
 pub async fn get_tasks(
-    State(database): State<DatabaseConnection>,) -> Result<Json<Vec<ResponseTask>>, StatusCode> {
-    println!("Starting get all tasks!");
-    let tasks = Tasks::find().all(&database).await.map_err(|_ | StatusCode::INTERNAL_SERVER_ERROR)?;
+    State(database): State<DatabaseConnection>,
+    Query(query_params): Query<GetTasksQueryParams>) -> Result<Json<Vec<ResponseTask>>, StatusCode> {
+
+    // Conditional filter search
+    // let mut priority_filter = Condition::all();
+    // if let Some(priority) = query_params.priority {
+    //     priority_filter = priority_filter.add(tasks::Column::Priority.eq(priority));
+    // }
+
+    let second_filter = Condition::all().add_option(query_params.priority.map(
+        |priority| {
+            if priority.is_empty() {
+                return tasks::Column::Priority.is_null();
+            }
+
+            tasks::Column::Priority.eq(priority)
+        }
+    ));
+
+    let tasks = Tasks::find()
+        .filter(second_filter)
+        .all(&database)
+        .await
+        .map_err(|_error| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let response_tasks = tasks
         .into_iter()
