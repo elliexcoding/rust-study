@@ -11,6 +11,7 @@ mod validate_data;
 mod custom_json_extractor;
 mod create_task;
 mod get_tasks;
+mod update_tasks;
 
 use axum::http::Method;
 use axum::{
@@ -19,6 +20,7 @@ use axum::{
     Router,
 };
 use axum::extract::FromRef;
+use axum::routing::put;
 use sea_orm::DatabaseConnection;
 use set_middleware_custom_header::set_middleware_custom_header;
 use tower_http::cors::{Any, CorsLayer};
@@ -33,6 +35,7 @@ use crate::routes::{
     custom_json_extractor::custom_json_extractor,
     create_task::create_task,
     get_tasks::{get_one_task, get_tasks},
+    update_tasks::atomic_update,
 };
 
 /// Middleware message
@@ -75,5 +78,6 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/tasks", post(create_task))
         .route("/tasks", get(get_tasks))
         .route("/tasks/:task_id", get(get_one_task))
+        .route("/tasks/:task_id", put(atomic_update))
         .with_state(app_state)
 }
