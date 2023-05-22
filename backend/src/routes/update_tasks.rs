@@ -2,6 +2,7 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
 use sea_orm::{DatabaseConnection, ColumnTrait, EntityTrait, Set, QueryFilter};
+use sea_orm::ActiveValue::Unchanged;
 use sea_orm::prelude::DateTimeWithTimeZone;
 use crate::database::tasks;
 use crate::database::tasks::Entity as Tasks;
@@ -24,7 +25,7 @@ pub async fn atomic_update(
     Json(request_task): Json<RequestTask>,
 ) -> Result<(), StatusCode> {
     let update_task = tasks::ActiveModel {
-        id: Set(task_id),
+        id: Unchanged(task_id),
         priority: Set(request_task.priority),
         title: Set(request_task.title),
         completed_at: Set(request_task.completed_at),
