@@ -12,15 +12,16 @@ mod custom_json_extractor;
 mod create_task;
 mod get_tasks;
 mod update_tasks;
+mod partial_update_tasks;
+mod delete_task;
 
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, post},
+    routing::{get, post, patch, put, delete},
     Router,
 };
 use axum::extract::FromRef;
-use axum::routing::put;
 use sea_orm::DatabaseConnection;
 use set_middleware_custom_header::set_middleware_custom_header;
 use tower_http::cors::{Any, CorsLayer};
@@ -36,6 +37,8 @@ use crate::routes::{
     create_task::create_task,
     get_tasks::{get_one_task, get_tasks},
     update_tasks::atomic_update,
+    partial_update_tasks::partial_update,
+    delete_task::delete_task,
 };
 
 /// Middleware message
@@ -79,5 +82,7 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/tasks", get(get_tasks))
         .route("/tasks/:task_id", get(get_one_task))
         .route("/tasks/:task_id", put(atomic_update))
+        .route("/tasks/:task_id", patch(partial_update))
+        .route("/tasks/:task_id", delete(delete_task))
         .with_state(app_state)
 }
