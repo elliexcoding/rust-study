@@ -28,7 +28,6 @@ impl Mailbox {
                 return Some(self.messages.remove(i));
             }
         }
-
         None
     }
 }
