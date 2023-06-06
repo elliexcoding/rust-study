@@ -1,6 +1,6 @@
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::Json;
+use axum::{Json};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, DatabaseConnection};
 use serde::{Deserialize, Serialize};
@@ -21,8 +21,8 @@ pub struct ResponseUser {
 }
 
 pub async fn create_user(
-    Json(request_user): Json<RequestUser>,
     State(database): State<DatabaseConnection>,
+    Json(request_user): Json<RequestUser>,
 ) -> Result<Json<ResponseUser>, StatusCode> {
     let new_user = users::ActiveModel {
         username: Set(request_user.username),
