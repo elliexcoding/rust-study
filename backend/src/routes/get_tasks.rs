@@ -12,12 +12,12 @@ pub struct ResponseTask {
     description: Option<String>,
     priority: Option<String>,
     deleted_at: Option<DateTime<FixedOffset>>,
+    user_id: Option<i32>,
 }
 
 
 pub async fn get_one_task(State(database): State<DatabaseConnection>,
                           Path(task_id): Path<i32>) -> Result<Json<ResponseTask>, StatusCode> {
-
     let task = Tasks::find_by_id(task_id)
         .filter(tasks::Column::DeletedAt.is_null())
         .one(&database)
@@ -25,12 +25,13 @@ pub async fn get_one_task(State(database): State<DatabaseConnection>,
         .unwrap();
 
     if let Some(task) = task {
-         Ok(Json(ResponseTask {
+        Ok(Json(ResponseTask {
             id: task.id,
             title: task.title,
             description: task.description,
             priority: task.priority,
             deleted_at: task.deleted_at,
+            user_id: task.user_id,
         }))
     } else {
         return Err(StatusCode::NOT_FOUND);
@@ -80,9 +81,9 @@ pub async fn get_tasks(
             description: task.description,
             priority: task.priority,
             deleted_at: task.deleted_at,
+            user_id: task.user_id,
         })
         .collect();
 
     Ok(Json(response_tasks))
-
 }
