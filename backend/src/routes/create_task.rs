@@ -16,8 +16,8 @@ pub struct CreateTaskRequest {
 }
 
 pub async fn create_task(State(database): State<DatabaseConnection>,
-                         Json(request_task): Json<CreateTaskRequest>,
-                         authorization: TypedHeader<Authorization<Bearer>>)
+                         authorization: TypedHeader<Authorization<Bearer>>,
+                         Json(request_task): Json<CreateTaskRequest>)
                          -> Result<(), StatusCode> {
     let token = authorization.token();
 
@@ -35,11 +35,12 @@ pub async fn create_task(State(database): State<DatabaseConnection>,
         priority: Set(request_task.priority),
         title: Set(request_task.title),
         description: Set(request_task.description),
+        user_id: Set(Some(user.id)),
         ..Default::default()
     };
 
     dbg!(&database);
-    let result = new_task.save(&database).await.unwrap();
+    let _result = new_task.save(&database).await.unwrap();
 
     Ok(())
     // dbg!(result);
