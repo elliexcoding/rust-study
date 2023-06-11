@@ -14,7 +14,7 @@ mod get_tasks;
 mod update_tasks;
 mod partial_update_tasks;
 mod delete_task;
-mod create_user;
+mod users;
 
 use axum::http::Method;
 use axum::{
@@ -40,7 +40,8 @@ use crate::routes::{
     update_tasks::atomic_update,
     partial_update_tasks::partial_update,
     delete_task::delete_task,
-    create_user::create_user,
+    users::create_user,
+    users::login,
 };
 
 /// Middleware message
@@ -87,5 +88,6 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/tasks/:task_id", patch(partial_update))
         .route("/tasks/:task_id", delete(delete_task))
         .route("/users", post(create_user))
+        .route("/login", post(login))
         .with_state(app_state)
 }
