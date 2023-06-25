@@ -1,11 +1,11 @@
+use crate::database::tasks;
+use crate::database::tasks::Entity as Tasks;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
-use sea_orm::{DatabaseConnection, ColumnTrait, EntityTrait, Set, QueryFilter, IntoActiveModel};
-use sea_orm::ActiveValue::Unchanged;
 use sea_orm::prelude::DateTimeWithTimeZone;
-use crate::database::tasks;
-use crate::database::tasks::Entity as Tasks;
+use sea_orm::ActiveValue::Unchanged;
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, Set};
 
 #[derive(serde::Deserialize)]
 pub struct RequestTask {
@@ -13,26 +13,26 @@ pub struct RequestTask {
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "::serde_with::rust::double_option",
+        with = "::serde_with::rust::double_option"
     )]
     pub priority: Option<Option<String>>,
     pub title: Option<String>,
-        #[serde(
+    #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "::serde_with::rust::double_option",
+        with = "::serde_with::rust::double_option"
     )]
     pub completed_at: Option<Option<DateTimeWithTimeZone>>,
-        #[serde(
+    #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "::serde_with::rust::double_option",
+        with = "::serde_with::rust::double_option"
     )]
     pub description: Option<Option<String>>,
-        #[serde(
+    #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "::serde_with::rust::double_option",
+        with = "::serde_with::rust::double_option"
     )]
     pub deleted_at: Option<Option<DateTimeWithTimeZone>>,
 }
@@ -45,7 +45,8 @@ pub async fn partial_update(
     let mut db_task = if let Some(task) = Tasks::find_by_id(task_id)
         .one(&database)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)? {
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    {
         task.into_active_model()
     } else {
         return Err(StatusCode::NOT_FOUND);
@@ -69,7 +70,6 @@ pub async fn partial_update(
     if let Some(deleted_at) = request_task.deleted_at {
         db_task.deleted_at = Set(deleted_at);
     }
-
 
     Tasks::update(db_task)
         .filter(tasks::Column::Id.eq(task_id))

@@ -1,9 +1,9 @@
-use axum::extract::{Path, State, Query};
+use crate::database::tasks::{self, Entity as Tasks};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::{DateTime, FixedOffset};
 use sea_orm::{ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter};
-use crate::database::tasks::{Entity as Tasks, self};
 
 #[derive(serde::Serialize)]
 pub struct ResponseTask {
@@ -15,9 +15,10 @@ pub struct ResponseTask {
     user_id: Option<i32>,
 }
 
-
-pub async fn get_one_task(State(database): State<DatabaseConnection>,
-                          Path(task_id): Path<i32>) -> Result<Json<ResponseTask>, StatusCode> {
+pub async fn get_one_task(
+    State(database): State<DatabaseConnection>,
+    Path(task_id): Path<i32>,
+) -> Result<Json<ResponseTask>, StatusCode> {
     let task = Tasks::find_by_id(task_id)
         .filter(tasks::Column::DeletedAt.is_null())
         .one(&database)
@@ -45,8 +46,8 @@ pub struct GetTasksQueryParams {
 
 pub async fn get_tasks(
     State(database): State<DatabaseConnection>,
-    Query(query_params): Query<GetTasksQueryParams>) -> Result<Json<Vec<ResponseTask>>, StatusCode> {
-
+    Query(query_params): Query<GetTasksQueryParams>,
+) -> Result<Json<Vec<ResponseTask>>, StatusCode> {
     // Conditional filter search
     let mut priority_filter = Condition::all();
     if let Some(priority) = query_params.priority {

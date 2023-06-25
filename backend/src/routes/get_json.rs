@@ -8,7 +8,7 @@ pub struct Data {
     username: String,
 }
 
-pub async fn get_json() -> Json<Data>{
+pub async fn get_json() -> Json<Data> {
     let data = Data {
         message: "Hello, world!".to_string(),
         count: 42,

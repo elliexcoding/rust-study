@@ -1,10 +1,10 @@
 // use crate::routes::create_routes;
-use std::net::SocketAddr;
 use dotenvy::dotenv;
 use sea_orm::Database;
+use std::net::SocketAddr;
 
-mod routes;
 mod database;
+mod routes;
 
 pub async fn run() {
     dotenv().ok();
@@ -12,7 +12,9 @@ pub async fn run() {
     let database_uri = dotenvy::var("DATABASE_URL").unwrap();
     println!("{}", &database_uri);
     println!("Database URI is set");
-    let database = Database::connect(database_uri).await.expect("Failed to initiate the db.");
+    let database = Database::connect(database_uri)
+        .await
+        .expect("Failed to initiate the db.");
     // let database = match database_check {
     //     Ok(database) => database,
     //     Err(error) => {

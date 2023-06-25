@@ -2,7 +2,6 @@ use axum::Json;
 /// Deserialize and validate JSON data with serde
 use serde::Deserialize;
 
-
 #[derive(Deserialize, Debug)]
 pub struct RequestUser {
     username: String,

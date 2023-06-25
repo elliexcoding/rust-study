@@ -1,47 +1,51 @@
+mod always_errors;
+mod create_task;
+mod custom_json_extractor;
+mod delete_task;
+mod get_json;
+mod get_tasks;
 mod hello;
 mod hello_json;
 mod middleware_msg;
+mod partial_update_tasks;
 mod path_variables;
 mod read_middleware_custom_header;
-mod set_middleware_custom_header;
-mod always_errors;
 mod returns_201;
-mod get_json;
-mod validate_data;
-mod custom_json_extractor;
-mod create_task;
-mod get_tasks;
+mod set_middleware_custom_header;
 mod update_tasks;
-mod partial_update_tasks;
-mod delete_task;
 mod users;
+mod validate_data;
 
+use axum::extract::FromRef;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, post, patch, put, delete},
+    routing::{delete, get, patch, post, put},
     Router,
 };
-use axum::extract::FromRef;
 use sea_orm::DatabaseConnection;
 use set_middleware_custom_header::set_middleware_custom_header;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::routes::{
-    hello::hello_world, hello_json::hello_json, middleware_msg::middleware_msg,
-    path_variables::path_variables, read_middleware_custom_header::read_middleware_custom_header,
     always_errors::always_errors,
-    returns_201::returns_201,
-    get_json::get_json,
-    validate_data::validate_data,
-    custom_json_extractor::custom_json_extractor,
     create_task::create_task,
-    get_tasks::{get_one_task, get_tasks},
-    update_tasks::atomic_update,
-    partial_update_tasks::partial_update,
+    custom_json_extractor::custom_json_extractor,
     delete_task::delete_task,
+    get_json::get_json,
+    get_tasks::{get_one_task, get_tasks},
+    hello::hello_world,
+    hello_json::hello_json,
+    middleware_msg::middleware_msg,
+    partial_update_tasks::partial_update,
+    path_variables::path_variables,
+    read_middleware_custom_header::read_middleware_custom_header,
+    returns_201::returns_201,
+    update_tasks::atomic_update,
     users::create_user,
     users::login,
+    users::logout,
+    validate_data::validate_data,
 };
 
 /// Middleware message
@@ -89,5 +93,6 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/tasks/:task_id", delete(delete_task))
         .route("/users", post(create_user))
         .route("/login", post(login))
+        .route("/logout", post(logout))
         .with_state(app_state)
 }
