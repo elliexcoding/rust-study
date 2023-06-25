@@ -1,31 +1,14 @@
-mod always_errors;
-mod create_task;
-mod custom_json_extractor;
-mod delete_task;
-mod get_json;
-mod get_tasks;
-mod hello;
-mod hello_json;
-mod middleware_msg;
-mod partial_update_tasks;
-mod path_variables;
-mod read_middleware_custom_header;
-mod returns_201;
-mod set_middleware_custom_header;
-mod update_tasks;
-mod users;
-mod validate_data;
-
-use axum::extract::FromRef;
-use axum::http::Method;
 use axum::{
     middleware,
-    routing::{delete, get, patch, post, put},
     Router,
+    routing::{delete, get, patch, post, put},
 };
+use axum::extract::FromRef;
+use axum::http::Method;
 use sea_orm::DatabaseConnection;
-use set_middleware_custom_header::set_middleware_custom_header;
 use tower_http::cors::{Any, CorsLayer};
+
+use set_middleware_custom_header::set_middleware_custom_header;
 
 use crate::routes::{
     always_errors::always_errors,
@@ -34,6 +17,7 @@ use crate::routes::{
     delete_task::delete_task,
     get_json::get_json,
     get_tasks::{get_one_task, get_tasks},
+    guard::guard,
     hello::hello_world,
     hello_json::hello_json,
     middleware_msg::middleware_msg,
@@ -47,6 +31,25 @@ use crate::routes::{
     users::logout,
     validate_data::validate_data,
 };
+
+mod always_errors;
+mod create_task;
+mod custom_json_extractor;
+mod delete_task;
+mod get_json;
+mod get_tasks;
+mod guard;
+mod hello;
+mod hello_json;
+mod middleware_msg;
+mod partial_update_tasks;
+mod path_variables;
+mod read_middleware_custom_header;
+mod returns_201;
+mod set_middleware_custom_header;
+mod update_tasks;
+mod users;
+mod validate_data;
 
 /// Middleware message
 #[derive(Clone, FromRef)]
@@ -68,6 +71,8 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
     };
     let app_state = AppState { database };
     Router::new()
+        .route("/logout", post(logout))
+        .route_layer(middleware::from_fn(guard))
         .route(
             "/read_middleware_custom_header",
             get(read_middleware_custom_header),
@@ -76,9 +81,9 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/", get(hello_world))
         .route("/json", post(hello_json))
         .route("/path/:id", post(path_variables))
-        .route("/middleware_msg", get(middleware_msg))
+        // .route("/middleware_msg", get(middleware_msg))
         // .layer(Extension(shared_data))
-        .with_state(shared_data)
+        // .with_state(shared_data)
         .layer(cors)
         .route("/always_errors", get(always_errors))
         .route("/returns_201", post(returns_201))
@@ -93,6 +98,5 @@ pub async fn create_routes(database: DatabaseConnection) -> Router {
         .route("/tasks/:task_id", delete(delete_task))
         .route("/users", post(create_user))
         .route("/login", post(login))
-        .route("/logout", post(logout))
         .with_state(app_state)
 }
