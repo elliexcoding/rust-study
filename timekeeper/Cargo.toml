@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.26"
+clap = "2"
+
+[target.'cfg(not(windows))'.dependencies]
+libc = "0.2.147"
