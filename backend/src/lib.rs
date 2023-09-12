@@ -5,6 +5,7 @@ use std::net::SocketAddr;
 
 mod database;
 mod routes;
+mod utils;
 
 pub async fn run() {
     dotenv().ok();
