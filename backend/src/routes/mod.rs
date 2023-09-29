@@ -30,6 +30,7 @@ use crate::routes::{
     users::login,
     users::logout,
     validate_data::validate_data,
+    app_error::app_error,
 };
 
 mod always_errors;
@@ -50,6 +51,7 @@ mod set_middleware_custom_header;
 mod update_tasks;
 mod users;
 mod validate_data;
+mod app_error;
 
 /// Middleware message
 #[derive(Clone, FromRef)]
