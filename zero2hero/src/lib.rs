@@ -1,13 +1,7 @@
-use std::future::IntoFuture;
-use axum::{
-    routing::{get, post},
-    http::StatusCode,
-    Json, Router,
-};
+pub use self::error::Result;
 use axum::response::{IntoResponse, Response};
-use serde::{Deserialize, Serialize};
+use axum::{http::StatusCode, routing::get, Router};
 use tokio::net::TcpListener;
-pub use self::error::{Result};
 
 mod error;
 
@@ -21,14 +15,9 @@ async fn main() -> Result<()> {
 }
 
 pub fn app() -> Router {
-    Router::new()
-        .route("/", get(index))
+    Router::new().route("/", get(index))
 }
 
-
 async fn index() -> Response {
-    (
-        StatusCode::OK,
-        "Hello World".to_string()
-    ).into_response()
+    (StatusCode::OK, "Hello World".to_string()).into_response()
 }
