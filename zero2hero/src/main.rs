@@ -4,7 +4,7 @@ use axum::{http::StatusCode, routing::get, Router};
 use tokio::net::TcpListener;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> zero2hero::Result<()> {
     let addr = "0.0.0.0:0";
     // run our app with hyper, listening globally on port 3000
     println!("Starting up the server...");
@@ -14,6 +14,8 @@ async fn main() {
         listener.local_addr().unwrap()
     );
     axum::serve(listener, app()).await.unwrap();
+
+    Ok(())
 }
 
 fn app() -> Router {

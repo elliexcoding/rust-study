@@ -15,5 +15,5 @@ async fn health_check_works() {
 
     assert_eq!(response.status(), 200);
     let body = response.into_body().collect().await.unwrap().to_bytes();
-    assert_eq!(body, "Hello, World!".as_bytes());
+    assert_eq!(body, "Hello World".as_bytes());
 }

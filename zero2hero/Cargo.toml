@@ -5,10 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-# Specify our lib path
-path = "src/lib.rs"
-
 [[bin]]
 path = "src/main.rs"
 name = "zero2hero"
