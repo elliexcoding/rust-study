@@ -1,25 +1,28 @@
-use std::net::SocketAddr;
-use actix_web::http::StatusCode;
-use actix_web::web::{Json, Path};
+use std::future::IntoFuture;
 use axum::{
-    routing::get,
-    Router,
+    routing::{get, post},
+    http::StatusCode,
+    Json, Router,
 };
 use axum::response::{IntoResponse, Response};
+use serde::{Deserialize, Serialize};
+use tokio::net::TcpListener;
+pub use self::error::{Result};
 
-pub async fn run() {
-    // build our application with a single route
-    let app = Router::new().route("/", get(index));
+mod error;
 
-    // run it with hyper on localhost:3000
-    println!("Booting up server");
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    println!("->> LISTENING on {addr}\n");
+#[tokio::main]
+async fn main() -> Result<()> {
+    // run our app with hyper, listening globally on port 3000
+    let listener = TcpListener::bind("0.0.0.0:0").await.unwrap();
+    axum::serve(listener, app()).await.unwrap();
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    Ok(())
+}
+
+pub fn app() -> Router {
+    Router::new()
+        .route("/", get(index))
 }
 
 
