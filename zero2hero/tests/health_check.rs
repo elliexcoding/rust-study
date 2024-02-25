@@ -2,7 +2,7 @@ use axum::{body::Body, http::Request};
 use http_body_util::BodyExt; // for `collect`
 
 use tower::ServiceExt;
-use zero2hero::app; // for `call`, `oneshot`, and `ready`
+use zero2hero::app;
 
 #[tokio::test]
 async fn health_check_works() {
