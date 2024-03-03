@@ -40,18 +40,25 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_returns_a_400_for_invalid_form_data() {
     let app = app();
-    let body = "name=frosty&20wolf";
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::POST)
-                .uri("/subscribe")
-                .header("content-type", "application/x-www-form-urlencoded")
-                .body(Body::from(body))
-                .unwrap()
-        )
-        .await
-        .unwrap();
+    let body = vec![
+        ("name=frosty&20wolf", "missing the email"),
+        ("email=frosty_wolf%40gmail.com", "missing the name"),
+        ("", "missing both name and email")
+    ];
+    for (invalid_body, error_message) in body {
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::POST)
+                    .uri("/subscribe")
+                    .header("content-type", "application/x-www-form-urlencoded")
+                    .body(Body::from(invalid_body))
+                    .unwrap()
+            )
+            .await
+            .unwrap();
 
-    assert_eq!(response.status(), 400);
+        assert_eq!(response.status(), 400);
+        assert_eq!(response.into_body().collect().await.unwrap(), error_message.as_bytes());
+    }
 }
