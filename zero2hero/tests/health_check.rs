@@ -2,6 +2,7 @@ use axum::{body::Body, http::{self, Request, StatusCode}};
 use http_body_util::BodyExt; // for `collect`
 
 use tower::ServiceExt;
+use log::error;
 use zero2hero::app;
 
 #[tokio::test]
@@ -26,7 +27,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .oneshot(
             Request::builder()
                 .method(http::Method::POST)
-                .uri("/subscribe")
+                .uri("/subscriptions")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .body(Body::from(body))
                 .unwrap()
@@ -39,13 +40,13 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
 #[tokio::test]
 async fn subscribe_returns_a_400_for_invalid_form_data() {
-    let app = app();
     let body = vec![
         ("name=frosty&20wolf", "missing the email"),
         ("email=frosty_wolf%40gmail.com", "missing the name"),
         ("", "missing both name and email")
     ];
     for (invalid_body, error_message) in body {
+        let app = app();
         let response = app
             .oneshot(
                 Request::builder()
@@ -58,7 +59,8 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), 400);
-        assert_eq!(response.into_body().collect().await.unwrap(), error_message.as_bytes());
+        assert_eq!(response.status(), 400,
+        "The API did not return a 400 Bad Request when the payload was {}.", error_message);
+        assert_eq!(response.into_body().collect().await.unwrap().to_bytes(), error_message.as_bytes());
     }
 }
