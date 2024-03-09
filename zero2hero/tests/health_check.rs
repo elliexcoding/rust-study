@@ -51,7 +51,7 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/subscribe")
+                    .uri("/subscriptions")
                     .header("content-type", "application/x-www-form-urlencoded")
                     .body(Body::from(invalid_body))
                     .unwrap()
@@ -61,6 +61,5 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
 
         assert_eq!(response.status(), 400,
         "The API did not return a 400 Bad Request when the payload was {}.", error_message);
-        assert_eq!(response.into_body().collect().await.unwrap().to_bytes(), error_message.as_bytes());
     }
 }

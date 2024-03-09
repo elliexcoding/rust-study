@@ -17,8 +17,15 @@ async fn index() -> Response {
     (StatusCode::OK, "Hello World".to_string()).into_response()
 }
 
-async fn subscribe(_form: Form<FormData>) -> Response {
-    (StatusCode::OK, "Subscribed".to_string()).into_response()
+async fn subscribe(user_account: Option<Form<FormData>>) -> Response {
+    match user_account {
+        Some(user_account) => {
+            (StatusCode::OK, "Subscribed".to_string()).into_response()
+        }
+        None => {
+            (StatusCode::BAD_REQUEST, "Invalid form data".to_string()).into_response()
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
