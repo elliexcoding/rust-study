@@ -1,15 +1,20 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
+#[derive(Debug)]
 pub enum TokenKind {
-    Number{ value: f64 },
+    Number{ value: i64 },
     Plus,
     Minus,
     Star,
     Slash,
     LParen,
     RParen,
+    Bad,
+    EOF,
 }
+
+#[derive(Debug)]
 pub struct Span {
     start: usize,
     end: usize,
@@ -26,6 +31,7 @@ impl Span {
     }
 }
 
+#[derive(Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub span: Span,
@@ -49,48 +55,63 @@ impl <'a> Lexer<'a> {
     }
 
     pub fn next_token(&mut self) -> Option<Token> {
-        self.skip_whitespace();
-        let c = self.input.peek()?;
-        let span = self.span();
-        let token = match c {
-            '0'..='9' => self.lex_number(),
-            '+' => {
-                self.input.next();
-                Token::new(TokenKind::Plus, span)
-            },
-            '-' => {
-                self.input.next();
-                Token::new(TokenKind::Minus, span)
-            },
-            '*' => {
-                self.input.next();
-                Token::new(TokenKind::Star, span)
-            },
-            '/' => {
-                self.input.next();
-                Token::new(TokenKind::Slash, span)
-            },
-            '(' => {
-                self.input.next();
-                Token::new(TokenKind::LParen, span)
-            },
-            ')' => {
-                self.input.next();
-                Token::new(TokenKind::RParen, span)
-            },
-            _ => {
-                self.input.next();
-                Token::new(TokenKind::Plus, span)
-            }
-        };
-        Some(token)
+        if self.current_pos > self.input.len() {
+            return None;
+        }
+        let eof_char = '\0';
+        if self.current_pos == self.input.len() {
+            self.current_pos += 1;
+            return Some(
+                Token::new(
+                    TokenKind::EOF,
+                    Span::new(0, 0, eof_char.to_string())
+                )
+            );
+        }
+
+        let start = self.current_pos;
+        let c = self.current_char();
+        let mut kind = TokenKind::Bad;
+        if Self::is_number_start(&c) {
+            let number = self.consume_number();
+            kind = TokenKind::Number{ value: number };
+        }
+        let end = self.current_pos;
+        let literal = self.input[start..end].to_string();
+        let span = Span::new(start, end, literal);
+        Some(Token::new(kind, span))
     }
 
     fn is_number_start(c: &char) -> bool {
-        c.peek().map_or(false, |c| c.is_digit(10))
+        c.is_digit(10)
     }
 
-    fn peek (&mut self) -> Option<char> {
-        self.input.peek().cloned()
+    // fn peek (&mut self) -> Option<char> {
+    //     self.input.peek()
+    // }
+
+    fn current_char(&self) -> char {
+        self.input.chars().nth(self.current_pos).unwrap()
+    }
+
+    fn consume(&mut self) -> Option<char>{
+        if self.current_pos >= self.input.len() {
+            return None;
+        }
+        let c = self.current_char();
+        self.current_pos += 1;
+        Some(c)
+    }
+
+    fn consume_number(&mut self) -> i64 {
+        let mut number = 0;
+        while let Some(c) = self.consume() {
+            if c.is_digit(10) {
+                number = number * 10 + c.to_digit(10).unwrap() as i64;
+            } else {
+                break;
+            }
+        }
+        number
     }
 }
