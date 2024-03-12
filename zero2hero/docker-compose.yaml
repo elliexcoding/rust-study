@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+  db:
+    image: postgres:16.2-bookworm
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: applet
+    ports:
+      - "5432:5432"
