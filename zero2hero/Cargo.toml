@@ -25,4 +25,4 @@ config = "0.14.0"
 [dependencies.sqlx]
 version = "0.7.4"
 default-features = false
-features = ["macros", "postgres", "uuid", "chrono", "migrate"]
+features = ["macros", "postgres", "uuid", "chrono", "migrate", "runtime-tokio-native-tls"]

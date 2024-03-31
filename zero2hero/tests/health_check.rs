@@ -1,9 +1,11 @@
 use axum::{body::Body, http::{self, Request, StatusCode}};
 use http_body_util::BodyExt; // for `collect`
+use zero2hero::configuration::get_configuration;
 
 use tower::ServiceExt;
 use log::error;
 use zero2hero::app;
+use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres};
 
 #[tokio::test]
 async fn health_check_works() {
@@ -22,6 +24,13 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     let app = app();
+
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    let connection_string = configuration.database.connection_string();
+    let connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
+
     let body = "name=frosty&20wolf&email=frosty_wolf%40gmail.com";
     let response = app
         .oneshot(
