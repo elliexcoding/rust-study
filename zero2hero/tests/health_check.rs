@@ -5,7 +5,7 @@ use zero2hero::configuration::get_configuration;
 use tower::ServiceExt;
 use log::error;
 use zero2hero::app;
-use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres};
+use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres, query};
 
 #[tokio::test]
 async fn health_check_works() {
@@ -27,7 +27,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
     let configuration = get_configuration().expect("Failed to read configuration.");
     let connection_string = configuration.database.connection_string();
-    let connection = PgConnection::connect(&connection_string)
+    let mut connection = PgConnection::connect(&connection_string)
         .await
         .expect("Failed to connect to Postgres.");
 
@@ -45,6 +45,14 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .unwrap();
 
     assert_eq!(response.status(), 200);
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved subscriptions.");
+
+    assert_eq!(saved.email, "frost_wolf@gmail.com");
+    assert_eq!(saved.name, "frosty wolf");
 }
 
 #[tokio::test]

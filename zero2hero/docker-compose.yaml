@@ -1,12 +1,16 @@
 version: '3.8'
 services:
   app:
+    container_name: backend
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
   db:
+    container_name: db
     image: postgres:16.2-bookworm
     environment:
       POSTGRES_USER: postgres
@@ -14,3 +18,8 @@ services:
       POSTGRES_DB: applet
     ports:
       - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
