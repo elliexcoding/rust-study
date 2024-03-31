@@ -33,3 +33,8 @@ struct FormData {
     email: String,
     name: String,
 }
+
+
+pub mod configuration;
+pub mod routes;
+pub mod startup;
