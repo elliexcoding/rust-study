@@ -1,4 +1,6 @@
 use actix_web::{web, HttpResponse};
+use axum::extract::State;
+use sqlx::PgPool;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -6,7 +8,7 @@ pub struct FormData {
     name: String,
 }
 
-pub async fn subscribe(_form: web::Form<FormData>) -> HttpResponse {
+pub async fn subscribe(_form: web::Form<FormData>, State(db): State<PgPool>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
