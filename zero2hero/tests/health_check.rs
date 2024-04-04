@@ -4,12 +4,24 @@ use zero2hero::configuration::get_configuration;
 
 use tower::ServiceExt;
 use log::error;
-use zero2hero::app;
+use zero2hero::build_routes;
 use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres, query};
+use sqlx::postgres::PgPoolOptions;
+
+pub async fn get_db_pool() -> PgPool {
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    PgPoolOptions::new()
+        .max_connections(50)
+        .acquire_timeout(std::time::Duration::from_secs(3))
+        .connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to Postgres.")
+}
 
 #[tokio::test]
 async fn health_check_works() {
-    let app = app();
+    let db = get_db_pool().await;
+    let app = build_routes(db);
     // 'Router' implements 'tower::Service<Request<Body>>', so we can cal it without running HTTP server
     let response = app
         .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
@@ -23,7 +35,8 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
-    let app = app();
+    let db = get_db_pool().await;
+    let app = build_routes(db);
 
     let configuration = get_configuration().expect("Failed to read configuration.");
     let connection_string = configuration.database.connection_string();
@@ -51,7 +64,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .await
         .expect("Failed to fetch saved subscriptions.");
 
-    assert_eq!(saved.email, "frost_wolf@gmail.com");
+    assert_eq!(saved.email, "frosty_wolf@gmail.com");
     assert_eq!(saved.name, "frosty wolf");
 }
 
@@ -63,7 +76,8 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
         ("", "missing both name and email")
     ];
     for (invalid_body, error_message) in body {
-        let app = app();
+        let db = get_db_pool().await;
+        let app = build_routes(db);
         let response = app
             .oneshot(
                 Request::builder()

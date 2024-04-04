@@ -11,7 +11,7 @@ name = "zero2hero"
 
 [dependencies]
 actix-web = "4.3.1"
-axum = "0.7.4"
+axum = { version = "0.7.4" , features = ["macros"]}
 bcrypt = "0.14.0"
 tokio = { version = "1.28.2", features = ["full"] }
 reqwest = "0.11.24"
@@ -22,6 +22,8 @@ http-body-util = "0.1.0"
 log = "0.4.20"
 config = "0.14.0"
 anyhow = "1.0.81"
+chrono = "0.4.37"
+uuid = {  version = "1.8.0", features = ["v4"] }
 
 [dependencies.sqlx]
 version = "0.7.4"
