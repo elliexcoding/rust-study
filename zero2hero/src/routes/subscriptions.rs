@@ -17,7 +17,7 @@ pub async fn subscribe(
     State(db): State<PgPool>,
     Form(_form): Form<FormData>,
 ) -> Result<(), StatusCode> {
-    sqlx::query!(
+    let result = sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at)
         VALUES ($1, $2, $3, $4)
@@ -28,10 +28,14 @@ pub async fn subscribe(
         chrono::Utc::now()
     )
         .execute(&db)
-        .await
-        .expect("TODO: panic message");
+        .await;
 
-    Ok(())
-
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            println!("Failed to execute query: {}", e);
+            Err(StatusCode::BAD_REQUEST)
+        },
+    }
 }
 

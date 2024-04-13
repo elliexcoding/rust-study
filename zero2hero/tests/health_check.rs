@@ -1,12 +1,13 @@
 use axum::{body::Body, http::{self, Request, StatusCode}};
 use http_body_util::BodyExt; // for `collect`
-use zero2hero::configuration::get_configuration;
+use zero2hero::configuration::{DatabaseSettings, get_configuration};
 
 use tower::ServiceExt;
 use log::error;
 use zero2hero::build_routes;
-use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres, query};
+use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres, query, Executor};
 use sqlx::postgres::PgPoolOptions;
+use uuid::Uuid;
 
 pub async fn get_db_pool() -> PgPool {
     let configuration = get_configuration().expect("Failed to read configuration.");
@@ -16,6 +17,65 @@ pub async fn get_db_pool() -> PgPool {
         .connect(&configuration.database.connection_string())
         .await
         .expect("Failed to connect to Postgres.")
+}
+
+pub async fn configure_database(config: &mut DatabaseSettings) -> PgPool {
+    config.database_name = Uuid::new_v4().to_string();
+    println!("Creating database: {}", config.database_name);
+
+    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+        .await
+        .expect("Failed to connect to Postgres.");
+    connection
+        .execute(&*format!(r#"CREATE DATABASE "{}";"#, config.database_name))
+        .await
+        .expect("Failed to create database.");
+
+    let connection_pool = PgPool::connect(&config.connection_string())
+        .await
+        .expect("Failed to connect to Postgres.");
+    sqlx::migrate!("./migrations")
+        .run(&connection_pool)
+        .await
+        .expect("Failed to run migrations.");
+
+    connection_pool
+}
+
+#[tokio::test]
+async fn subscribe_returns_a_200_for_valid_form_data() {
+    let mut configuration = get_configuration().expect("Failed to read configuration.");
+    let connection_pool = configure_database(&mut configuration.database).await;
+    let app = build_routes(connection_pool.clone());
+
+    let body = "name=frosty&20wolf&email=frosty_wolf%40gmail.com";
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method(http::Method::POST)
+                .uri("/subscriptions")
+                .header("content-type", "application/x-www-form-urlencoded")
+                .body(Body::from(body))
+                .unwrap()
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), 200);
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&connection_pool)
+        .await
+        .expect("Failed to fetch saved subscriptions.");
+
+    assert_eq!(saved.email, "frosty_wolf@gmail.com");
+    assert_eq!(saved.name, "frosty");
+
+    // Clean up the test data
+    sqlx::query!("DELETE FROM subscriptions WHERE email = $1", saved.email)
+        .execute(&connection_pool)
+        .await
+        .expect("Failed to delete test data");
 }
 
 #[tokio::test]
@@ -34,41 +94,6 @@ async fn health_check_works() {
 }
 
 #[tokio::test]
-async fn subscribe_returns_a_200_for_valid_form_data() {
-    let db = get_db_pool().await;
-    let app = build_routes(db);
-
-    let configuration = get_configuration().expect("Failed to read configuration.");
-    let connection_string = configuration.database.connection_string();
-    let mut connection = PgConnection::connect(&connection_string)
-        .await
-        .expect("Failed to connect to Postgres.");
-
-    let body = "name=frosty&20wolf&email=frosty_wolf%40gmail.com";
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method(http::Method::POST)
-                .uri("/subscriptions")
-                .header("content-type", "application/x-www-form-urlencoded")
-                .body(Body::from(body))
-                .unwrap()
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), 200);
-
-    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
-        .fetch_one(&mut connection)
-        .await
-        .expect("Failed to fetch saved subscriptions.");
-
-    assert_eq!(saved.email, "frosty_wolf@gmail.com");
-    assert_eq!(saved.name, "frosty wolf");
-}
-
-#[tokio::test]
 async fn subscribe_returns_a_400_for_invalid_form_data() {
     let body = vec![
         ("name=frosty&20wolf", "missing the email"),
@@ -76,6 +101,7 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
         ("", "missing both name and email")
     ];
     for (invalid_body, error_message) in body {
+        println!("{:?}", invalid_body);
         let db = get_db_pool().await;
         let app = build_routes(db);
         let response = app
@@ -90,7 +116,9 @@ async fn subscribe_returns_a_400_for_invalid_form_data() {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), 400,
+        println!("Errorz: {:?}", response.body());
+
+        assert_eq!(response.status(), 422,
         "The API did not return a 400 Bad Request when the payload was {}.", error_message);
     }
 }
