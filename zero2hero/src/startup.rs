@@ -1,6 +1,9 @@
 use crate::{build_routes};
 use crate::configuration::get_configuration;
 use sqlx::postgres::{PgPoolOptions};
+use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
+use tracing::{info_span, Span};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub async fn run() {
     let configuration = get_configuration().expect("Failed to read configuration.");

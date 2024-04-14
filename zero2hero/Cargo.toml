@@ -24,6 +24,9 @@ config = "0.14.0"
 anyhow = "1.0.81"
 chrono = "0.4.37"
 uuid = {  version = "1.8.0", features = ["v4"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tower-http = { version = "0.5.2", features = ["trace"] }
 
 [dependencies.sqlx]
 version = "0.7.4"
