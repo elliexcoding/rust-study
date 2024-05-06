@@ -10,7 +10,7 @@ use sqlx::PgPool;
 use routes::subscribe;
 use crate::configuration::get_configuration;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
-use tracing::{info_span, Span};
+use tracing::{debug, error, info, span, warn, Level};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 
@@ -22,11 +22,14 @@ pub fn build_routes(pool: PgPool) -> Router {
     /// Set up the tracing configuration
     tracing_subscriber::registry()
         .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                // axum logs rejections from built-in extractors with the `axum::rejection`
-                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
-            }),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_|
+                // {
+                //     // axum logs rejections from built-in extractors with the `axum::rejection`
+                //     // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
+                //     "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
+                // }
+                "debug".into()
+            ),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -39,8 +42,9 @@ pub fn build_routes(pool: PgPool) -> Router {
         .layer(TraceLayer::new_for_http())
 }
 
-
+#[tracing::instrument]
 async fn index() -> Response {
+    warn!("Hello World");
     (StatusCode::OK, "Hello World".to_string()).into_response()
 }
 
