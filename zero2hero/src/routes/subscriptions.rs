@@ -5,13 +5,15 @@ use uuid::Uuid;
 use axum::Form;
 use axum::http::StatusCode;
 use axum::debug_handler;
+use tracing::{debug, error, info, span, warn, Level};
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct FormData {
     email: String,
     name: String,
 }
 
+#[tracing::instrument]
 #[debug_handler]
 pub async fn subscribe(
     State(db): State<PgPool>,
@@ -31,11 +33,14 @@ pub async fn subscribe(
         .await;
 
     match result {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            info!("New subscriber details saved");
+            Ok(())
+        }
         Err(e) => {
-            println!("Failed to execute query: {}", e);
+            error!("Failed to execute query: {}", e);
             Err(StatusCode::BAD_REQUEST)
-        },
+        }
     }
 }
 
