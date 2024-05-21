@@ -11,7 +11,10 @@ use routes::subscribe;
 use crate::configuration::get_configuration;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
 use tracing::{debug, error, info, span, warn, Level};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, Registry, util::SubscriberInitExt};
+use tracing::subscriber::set_global_default;
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_log::LogTracer;
 
 
 pub struct AppState {
@@ -19,20 +22,19 @@ pub struct AppState {
 }
 
 pub fn build_routes(pool: PgPool) -> Router {
-    /// Set up the tracing configuration
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_|
-                // {
-                //     // axum logs rejections from built-in extractors with the `axum::rejection`
-                //     // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                //     "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
-                // }
-                "debug".into()
-            ),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    // Redirect log events to subscriber
+    LogTracer::init().expect("Failed to set logger");
+
+    // Set up the tracing configuration
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let formatting_layer = BunyanFormattingLayer::new("zero2hero".into(), std::io::stdout);
+    let subscriber = Registry::default()
+        // .with(fmt::layer().pretty())
+        .with(formatting_layer)
+        .with(JsonStorageLayer)
+        .with(env_filter);
+
+    set_global_default(subscriber).expect("Failed to set subscriber");
 
 
     Router::new()
