@@ -15,9 +15,9 @@ pub struct DatabaseSettings {
     pub database_name: String,
 }
 
-pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+pub fn get_configuration(config_path: String) -> Result<Settings, config::ConfigError> {
     let settings = Config::builder()
-        .add_source(config::File::with_name("configuration"))
+        .add_source(config::File::with_name(&config_path))
         .build()
         .unwrap();
 
