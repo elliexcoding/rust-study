@@ -3,7 +3,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version)]
 pub struct Args {
-    #[arg(short, long, default_value_t = String::from("./base.yaml"))]
+    #[arg(short, long, default_value_t = String::from("./config/base.yaml"))]
     pub config_path: String,
 }
 
