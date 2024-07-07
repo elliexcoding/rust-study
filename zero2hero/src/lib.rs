@@ -16,27 +16,15 @@ use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, Registry, util::S
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_log::LogTracer;
-
+use crate::telemetry::{get_subscriber, init_subscriber};
 
 pub struct AppState {
     pub db: sqlx::PgPool,
 }
 
 pub fn build_routes(pool: PgPool) -> Router {
-    // Redirect log events to subscriber
-    LogTracer::init().expect("Failed to set logger");
-
-    // Set up the tracing configuration
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("zero2hero".into(), std::io::stdout);
-    let subscriber = Registry::default()
-        // .with(fmt::layer().pretty())
-        .with(formatting_layer)
-        .with(JsonStorageLayer)
-        .with(env_filter);
-
-    set_global_default(subscriber).expect("Failed to set subscriber");
-
+    let subscriber = get_subscriber("zero2hero".into(), "info".into());
+    init_subscriber(subscriber);
 
     Router::new()
         .route("/", get(index))
@@ -60,3 +48,4 @@ struct FormData {
 pub mod configuration;
 pub mod routes;
 pub mod startup;
+pub mod telemetry;
