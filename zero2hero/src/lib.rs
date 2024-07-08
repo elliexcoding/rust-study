@@ -2,20 +2,14 @@ mod cmd;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{
-    extract::FromRef,
-    routing::{get, post, IntoMakeService},
+    routing::{get, post},
     Router,
 };
 use serde::Deserialize;
 use sqlx::PgPool;
 use routes::subscribe;
-use crate::configuration::get_configuration;
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
-use tracing::{debug, error, info, span, warn, Level};
-use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, Registry, util::SubscriberInitExt};
-use tracing::subscriber::set_global_default;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
+use tower_http::{trace::TraceLayer};
+use tracing::{warn};
 use crate::telemetry::{get_subscriber, init_subscriber};
 
 pub struct AppState {

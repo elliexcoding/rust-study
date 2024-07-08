@@ -1,11 +1,10 @@
-use std::sync::Arc;
 use axum::extract::State;
 use sqlx::PgPool;
 use uuid::Uuid;
 use axum::Form;
 use axum::http::StatusCode;
 use axum::debug_handler;
-use tracing::{debug, error, info, span, warn, Level, info_span};
+use tracing::{error, info_span};
 use tracing::Instrument;
 
 #[derive(Debug, serde::Deserialize)]

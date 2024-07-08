@@ -1,4 +1,3 @@
-use sqlx::PgPool;
 use crate::{build_routes};
 use crate::configuration::get_configuration;
 use crate::cmd;

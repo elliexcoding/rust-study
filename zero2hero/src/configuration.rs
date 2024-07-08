@@ -1,4 +1,4 @@
-use config::{Config, File, FileFormat};
+use config::{Config};
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
