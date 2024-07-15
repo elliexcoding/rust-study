@@ -1,3 +1,4 @@
+use secrecy::ExposeSecret;
 use crate::{build_routes};
 use crate::configuration::get_configuration;
 use crate::cmd;
@@ -16,12 +17,12 @@ pub async fn run() {
         listener.local_addr().unwrap()
     );
 
-    println!("{}", &configuration.database.connection_string());
+    println!("{}", &configuration.database.connection_string().expose_secret());
 
     let pool = PgPoolOptions::new()
         .max_connections(50)
         .acquire_timeout(std::time::Duration::from_secs(1))
-        .connect_lazy(&configuration.database.connection_string())
+        .connect_lazy(&configuration.database.connection_string().expose_secret())
         .expect("Failed to connect to Postgres.");
 
 

@@ -1,6 +1,8 @@
 application_port: 8080
 database:
-  host: "db"
+  # Switch to "db" when running in Docker mode
+#  host: "db"
+  host: "localhost"
   port: 5432
   username: "postgres"
   password: "postgres"

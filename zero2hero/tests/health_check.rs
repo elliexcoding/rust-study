@@ -4,17 +4,18 @@ use zero2hero::configuration::{DatabaseSettings, get_configuration};
 
 use tower::ServiceExt;
 use log::error;
+use secrecy::ExposeSecret;
 use zero2hero::build_routes;
 use sqlx::{PgConnection, Connection, PgPool, Pool, Postgres, query, Executor};
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
 
 pub async fn get_db_pool() -> PgPool {
-    let configuration = get_configuration().expect("Failed to read configuration.");
+    let configuration = get_configuration("".to_string()).expect("Failed to read configuration.");
     PgPoolOptions::new()
         .max_connections(50)
         .acquire_timeout(std::time::Duration::from_secs(3))
-        .connect(&configuration.database.connection_string())
+        .connect(&configuration.database.connection_string().expose_secret())
         .await
         .expect("Failed to connect to Postgres.")
 }
@@ -23,7 +24,7 @@ pub async fn configure_database(config: &mut DatabaseSettings) -> PgPool {
     config.database_name = Uuid::new_v4().to_string();
     println!("Creating database: {}", config.database_name);
 
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+    let mut connection = PgConnection::connect(&config.connection_string_without_db().expose_secret())
         .await
         .expect("Failed to connect to Postgres.");
     connection
@@ -31,7 +32,7 @@ pub async fn configure_database(config: &mut DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to create database.");
 
-    let connection_pool = PgPool::connect(&config.connection_string())
+    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
         .await
         .expect("Failed to connect to Postgres.");
     sqlx::migrate!("./migrations")
