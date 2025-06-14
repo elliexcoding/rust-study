@@ -1,4 +1,4 @@
-use libheif_rs::{Channel, ColorSpace, HeifContext, ItemId, LibHeif, Result, RgbChroma};
+use libheif_rs::{Channel, ColorSpace, HeifContext, Image, ItemId, LibHeif, Result, RgbChroma};
 use std::ffi;
 use std::ptr;
 use image::{DynamicImage, ImageReader, Rgb, ExtendedColorType, ImageEncoder};
@@ -37,7 +37,17 @@ fn main() -> Result<()>{
     assert_eq!(image.width(), 5712);
     assert_eq!(image.height(), 4284);
 
-    let img2 = ImageReader::new(image).with_guessed_format()?.decode()?;
+    let converted_image = encode_webp(&image);
+    match converted_image {
+        Ok(data) => {
+            // Save the WebP data to a file
+            std::fs::write("output.webp", data).expect("Unable to write file");
+            println!("WebP image saved successfully.");
+        },
+        Err(e) => {
+            eprintln!("Error encoding WebP: {}", e);
+        }
+    }
 
     Ok(())
 }
